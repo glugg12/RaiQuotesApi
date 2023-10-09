@@ -1,0 +1,96 @@
+openapi: "3.0.0"
+info:
+  title: RaiQuotesV2
+  description: A quotes database API for use with RedBot
+  version: 0.0.1
+servers:
+  - url: https://localhost:8080
+paths:
+  /quotes:
+    get:
+      summary: Retrieve all quotes
+      operationId: getAllQuotesGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuoteDto"
+    post:
+      summary: Save a new quote
+      operationId: addQuotePOST
+      tags:
+        - quote
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/AddQuoteRequestDto"
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/QuoteDto"
+components:
+  schemas:
+    QuoteDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        serverQuoteId:
+          type: integer
+          example: 1
+        quote:
+          type: string
+          example: "quote"
+        serverId:
+          type: string
+          example: "012345678"
+        addedBy:
+          type: string
+          example: "012345678"
+        authorId:
+          type: string
+          example: "012345678"
+        author_name:
+          type: string
+          example: "Example"
+        dateAdded:
+          type: string
+          example: "<DATE>"
+        imageUrl:
+          type: string
+          example: "https://animage.com"
+    AddQuoteRequestDto:
+      type: object
+      properties:
+        quote:
+          type: string
+          example: "quote"
+        serverId:
+          type: string
+          example: "012345678"
+        addedBy:
+          type: string
+          example: "012345678"
+        authorId:
+          type: string
+          example: "012345678"
+        authorName:
+          type: string
+          example: "Example"
+        date:
+          type: string
+          example: "<DATE>"
+        imageUrl:
+          type: string
+          example: "https://animage.com"
