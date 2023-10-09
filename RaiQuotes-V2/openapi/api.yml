@@ -104,6 +104,27 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/QuoteDto"
+    delete:
+      summary: Get a random quote form a server
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The quote's server Id
+      operationId: deleteQuoteByServerQuoteIdDELETE
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
 components:
   schemas:
     ApiError:
