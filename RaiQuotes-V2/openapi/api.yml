@@ -38,8 +38,83 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/QuoteDto"
+  /quotes/{id}:
+    get:
+      summary: Get a quote by Id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Id of the quote to get
+      operationId: getQuoteGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/QuoteDto"
+  /quotes/server/{serverId}/random:
+    get:
+      summary: Get a random quote form a server
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+      operationId: getServerRandomGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/QuoteDto"
+  /quotes/server/{serverId}/{id}:
+    get:
+      summary: Get a random quote form a server
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The quote's server Id
+      operationId: getQuoteFromServerGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/QuoteDto"
 components:
   schemas:
+    ApiError:
+      type: object
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        detail:
+          type: string
     QuoteDto:
       type: object
       properties:
