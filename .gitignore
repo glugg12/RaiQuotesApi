@@ -36,3 +36,4 @@ build/
 /.mvn/
 /RaiQuotes-V2/.idea/
 /RaiQuotes-V2/.mvn/
+.env
