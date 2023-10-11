@@ -8,5 +8,6 @@ import java.util.Optional;
 
 public interface QuoteRepository extends CrudRepository<Quote, Integer> {
     List<Quote> findByServerId(String serverId);
+    List<Quote> findByAuthorId(String authorId);
     Optional<Quote> findByServerIdAndServerQuoteId(String serverId, Integer quoteId);
 }

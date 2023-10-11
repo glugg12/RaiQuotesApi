@@ -2,11 +2,10 @@ package com.example.raiquotesv2.controller;
 
 import com.baeldung.openapi.api.QuotesApi;
 import com.baeldung.openapi.model.AddQuoteRequestDto;
+import com.baeldung.openapi.model.AuthorTotalDto;
 import com.baeldung.openapi.model.QuoteDto;
-import com.example.raiquotesv2.Exception.EndpointApplicationError;
-import com.example.raiquotesv2.Exception.NoQuotesForServerException;
-import com.example.raiquotesv2.Exception.QuoteApiError;
-import com.example.raiquotesv2.Exception.QuoteNotFoundException;
+import com.baeldung.openapi.model.RemixQuoteDto;
+import com.example.raiquotesv2.Exception.*;
 import com.example.raiquotesv2.service.QuoteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +64,28 @@ public class QuoteController implements QuotesApi {
             return new ResponseEntity<>(HttpStatus.OK);
         }catch(QuoteNotFoundException e){
             throw new EndpointApplicationError(QuoteApiError.QUOTE_NOT_FOUND, e.getMessage());
+        }
+    }
+
+    public ResponseEntity<AuthorTotalDto> getAuthorTotalGET(String serverId, String authorId){
+        try{
+            return new ResponseEntity<>(quoteService.getTotalQuotesAttributedToAuthor(serverId, authorId), HttpStatus.OK);
+        }catch(QuoteNotFoundException e){
+            throw new EndpointApplicationError(QuoteApiError.QUOTE_NOT_FOUND, e.getMessage());
+        }
+    }
+
+    public ResponseEntity<RemixQuoteDto> remixQuoteGET(String serverId){
+        try{
+            RemixQuoteDto remixQuoteDto = quoteService.getRemixedQuote(serverId);
+            return new ResponseEntity<>(remixQuoteDto, HttpStatus.OK);
+        }catch(NoQuotesForServerException e)
+        {
+            throw new EndpointApplicationError(QuoteApiError.NO_QUOTES_FOR_SERVER, e.getMessage());
+        }
+        catch(NoSplitDataForQuoteException e)
+        {
+            throw new EndpointApplicationError(QuoteApiError.NO_SPLIT_DATA_FOR_QUOTE, e.getMessage());
         }
     }
 }

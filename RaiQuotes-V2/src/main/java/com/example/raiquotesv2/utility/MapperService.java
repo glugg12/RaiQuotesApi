@@ -12,6 +12,7 @@ public interface MapperService {
 
     MapperService INSTANCE = Mappers.getMapper(MapperService.class);
     QuoteDto quoteToQuoteDto(Quote quote);
+    Quote quoteDtoToQuote(QuoteDto quoteDto);
 
     @Mapping(target = "addedBy", source = "addedBy")
     @Mapping(target = "authorId", source = "authorId")

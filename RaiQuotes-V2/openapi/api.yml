@@ -80,7 +80,7 @@ paths:
                 $ref: "#/components/schemas/QuoteDto"
   /quotes/server/{serverId}/{id}:
     get:
-      summary: Get a random quote form a server
+      summary: Get a quote by its server quote id
       parameters:
         - in: path
           name: serverId
@@ -105,7 +105,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/QuoteDto"
     delete:
-      summary: Get a random quote form a server
+      summary: Delete a quote from the server
       parameters:
         - in: path
           name: serverId
@@ -125,6 +125,104 @@ paths:
       responses:
         "200":
           description: OK
+  /quotes/server/{serverId}/author/{authorId}:
+    get:
+      summary: Get a quote author's total quotes attributed to them
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+        - in: path
+          name: authorId
+          schema:
+            type: string
+          required: true
+          description: The author's discord Id
+      operationId: getAuthorTotalGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/AuthorTotalDto"
+  /quotes/server/{serverId}/remix:
+    get:
+      summary: Remix Quotes on the server
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+      operationId: remixQuoteGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/RemixQuoteDto"
+  /quotes/server/{serverId}/remix/{id}:
+    get:
+      summary: Remix Quotes on the server
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The server quote ID to remix
+      operationId: remixQuoteIDGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/RemixQuoteDto"
+  /quotes/server/{serverId}/remix/{authorId}:
+    get:
+      summary: Remix Quotes on the server
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+        - in: path
+          name: authorId
+          schema:
+            type: string
+          required: true
+          description: The author discord ID to pull quotes from
+      operationId: remixQuoteAuthorGET
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/RemixQuoteDto"
 components:
   schemas:
     ApiError:
@@ -190,3 +288,33 @@ components:
         imageUrl:
           type: string
           example: "https://animage.com"
+    AuthorTotalDto:
+      type: object
+      properties:
+        serverId:
+          type: string
+          example: "1234565677"
+        authorId:
+          type: string
+          example: "012345678"
+        timesQuoted:
+          type: integer
+          example: 1
+    RemixQuoteDto:
+      type: object
+      properties:
+        author1:
+          type: string
+          example: "0192901381"
+        author2:
+          type: string
+          example: "9097986076"
+        quoteId1:
+          type: integer
+          example: 1
+        quoteId2:
+          type: integer
+          example: 1
+        quote:
+          type: string
+          example: "A quote"
