@@ -9,6 +9,8 @@ import com.example.raiquotesv2.Exception.*;
 import com.example.raiquotesv2.service.QuoteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -75,9 +77,9 @@ public class QuoteController implements QuotesApi {
         }
     }
 
-    public ResponseEntity<RemixQuoteDto> remixQuoteGET(String serverId){
+    public ResponseEntity<RemixQuoteDto> remixQuoteGET(String serverId, @RequestParam(required = false) Integer quoteId, @RequestParam(required = false) String authorId){
         try{
-            RemixQuoteDto remixQuoteDto = quoteService.getRemixedQuote(serverId);
+            RemixQuoteDto remixQuoteDto = quoteService.getRemixedQuote(serverId, quoteId, authorId);
             return new ResponseEntity<>(remixQuoteDto, HttpStatus.OK);
         }catch(NoQuotesForServerException e)
         {
@@ -86,6 +88,10 @@ public class QuoteController implements QuotesApi {
         catch(NoSplitDataForQuoteException e)
         {
             throw new EndpointApplicationError(QuoteApiError.NO_SPLIT_DATA_FOR_QUOTE, e.getMessage());
+        } catch (QuoteNotFoundException e) {
+            throw new EndpointApplicationError(QuoteApiError.QUOTE_NOT_FOUND, e.getMessage());
+        } catch (TooManyArgumentsException e) {
+            throw new EndpointApplicationError(QuoteApiError.TOO_MANY_ARGUMENTS, e.getMessage());
         }
     }
 }

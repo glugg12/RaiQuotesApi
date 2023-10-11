@@ -6,7 +6,8 @@ import org.springframework.http.HttpStatus;
 public enum QuoteApiError {
     QUOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Quote not found"),
     NO_QUOTES_FOR_SERVER(HttpStatus.PRECONDITION_FAILED, "No quotes for this server ID"),
-    NO_SPLIT_DATA_FOR_QUOTE(HttpStatus.PRECONDITION_FAILED, "No split data for this quote");
+    NO_SPLIT_DATA_FOR_QUOTE(HttpStatus.PRECONDITION_FAILED, "No split data for this quote"),
+    TOO_MANY_ARGUMENTS(HttpStatus.BAD_REQUEST, "Too many query requests");
     private final HttpStatus status;
 
     private final String message;

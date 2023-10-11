@@ -161,6 +161,16 @@ paths:
             type: string
           required: true
           description: The discord server Id
+        - in: query
+          name: quoteId
+          schema:
+            type: integer
+          description: the quote id to use for the quote
+        - in: query
+          name: authorId
+          schema:
+            type: string
+          description: the author to pull quotes from
       operationId: remixQuoteGET
       tags:
         - quote

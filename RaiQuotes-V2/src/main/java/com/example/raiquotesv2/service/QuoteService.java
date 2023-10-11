@@ -7,6 +7,7 @@ import com.baeldung.openapi.model.RemixQuoteDto;
 import com.example.raiquotesv2.Exception.NoQuotesForServerException;
 import com.example.raiquotesv2.Exception.NoSplitDataForQuoteException;
 import com.example.raiquotesv2.Exception.QuoteNotFoundException;
+import com.example.raiquotesv2.Exception.TooManyArgumentsException;
 import com.example.raiquotesv2.entity.Quote;
 import com.example.raiquotesv2.entity.RemixSplit;
 import com.example.raiquotesv2.repository.QuoteRepository;
@@ -70,6 +71,17 @@ public class QuoteService {
         return quoteDtos;
     }
 
+    public List<QuoteDto> getAllQuotesByServerAndAuthor(String serverId, String authorId) throws NoQuotesForServerException {
+        List<QuoteDto> quoteDtos = new ArrayList<>();
+        List<Quote> quotes = quoteRepository.findByServerIdAndAuthorId(serverId, authorId);
+        if(quotes.isEmpty())
+        {
+            throw new NoQuotesForServerException("No quotes on server " + serverId + " for author " + authorId);
+        }
+        quotes.forEach((p)-> quoteDtos.add(MapperService.INSTANCE.quoteToQuoteDto(p)));
+        return quoteDtos;
+    }
+
     public QuoteDto selectRandomQuote(List<QuoteDto> quoteDtoList){
         Random random = new Random();
         int index = random.nextInt(quoteDtoList.size());
@@ -106,23 +118,29 @@ public class QuoteService {
         return totalDto;
     }
 
-    public RemixQuoteDto getRemixedQuote(String server) throws NoQuotesForServerException, NoSplitDataForQuoteException {
-        List<QuoteDto> quoteDtos = getAllServerQuotes(server);
-        Random random = new Random();
-        int firstId = random.nextInt(quoteDtos.size());
-        int secondId = random.nextInt(quoteDtos.size());
-        Quote firstQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(firstId));
-        Quote secondQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(secondId));
-        int firstEnd = remixSplitRepository.findRemixSplitByQuote(firstQuote).map(RemixSplit::getSplitLeftEndPos).orElseThrow(() -> new NoSplitDataForQuoteException("No split data for quote " + firstQuote.getId()));
-        int secondEnd = remixSplitRepository.findRemixSplitByQuote(secondQuote).map(RemixSplit::getSplitRightEndPos).orElseThrow(() -> new NoSplitDataForQuoteException("No split data for quote " + secondQuote.getId()));
-        String remixed = StringUtils.substring(quoteDtos.get(firstId).getQuote(), 0, firstEnd) + StringUtils.substring(quoteDtos.get(secondId).getQuote(), secondEnd, quoteDtos.get(secondId).getQuote().length());
-        RemixQuoteDto remixQuoteDto = new RemixQuoteDto();
-        remixQuoteDto.setQuote(remixed);
-        remixQuoteDto.setAuthor1(firstQuote.getAuthorId());
-        remixQuoteDto.setQuoteId1(firstQuote.getServerQuoteId());
-        remixQuoteDto.setAuthor2(secondQuote.getAuthorId());
-        remixQuoteDto.setQuoteId2(secondQuote.getServerQuoteId());
-        return remixQuoteDto;
+    public RemixQuoteDto getRemixedQuote(String server, Integer quoteId, String authorId) throws NoQuotesForServerException, NoSplitDataForQuoteException, QuoteNotFoundException, TooManyArgumentsException {
+        if(quoteId == null)
+        {
+            if(authorId == null)
+            {
+                return remix(server);
+            }
+            else
+            {
+                return remixWithAuthorId(server, authorId);
+            }
+        }
+        else
+        {
+            if(authorId == null)
+            {
+                return remixWithQuoteId(server, quoteId);
+            }
+            else
+            {
+                throw new TooManyArgumentsException("Cannot have both quoteId and authorId");
+            }
+        }
     }
 
     //private functions
@@ -147,5 +165,59 @@ public class QuoteService {
         AtomicInteger nextId = new AtomicInteger();
         quotes.forEach((p)-> nextId.set(Math.max(p.getServerQuoteId(), nextId.get())));
         return nextId.get() + 1;
+    }
+
+    private RemixQuoteDto remix(String server) throws NoQuotesForServerException, NoSplitDataForQuoteException {
+        List<QuoteDto> quoteDtos = getAllServerQuotes(server);
+        Random random = new Random();
+        int firstId = random.nextInt(quoteDtos.size());
+        int secondId = random.nextInt(quoteDtos.size());
+        Quote firstQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(firstId));
+        Quote secondQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(secondId));
+        return executeRemix(firstQuote, secondQuote);
+    }
+
+    private RemixQuoteDto executeRemix(Quote firstQuote, Quote secondQuote) throws NoSplitDataForQuoteException {
+        int firstEnd = remixSplitRepository.findRemixSplitByQuote(firstQuote).map(RemixSplit::getSplitLeftEndPos).orElseThrow(() -> new NoSplitDataForQuoteException("No split data for quote " + firstQuote.getId()));
+        int secondEnd = remixSplitRepository.findRemixSplitByQuote(secondQuote).map(RemixSplit::getSplitRightEndPos).orElseThrow(() -> new NoSplitDataForQuoteException("No split data for quote " + secondQuote.getId()));
+        String remixed = StringUtils.substring(firstQuote.getQuote(), 0, firstEnd) + StringUtils.substring(secondQuote.getQuote(), secondEnd, secondQuote.getQuote().length());
+        RemixQuoteDto remixQuoteDto = new RemixQuoteDto();
+        remixQuoteDto.setQuote(remixed);
+        remixQuoteDto.setAuthor1(firstQuote.getAuthorId());
+        remixQuoteDto.setQuoteId1(firstQuote.getServerQuoteId());
+        remixQuoteDto.setAuthor2(secondQuote.getAuthorId());
+        remixQuoteDto.setQuoteId2(secondQuote.getServerQuoteId());
+        return remixQuoteDto;
+    }
+
+    private RemixQuoteDto remixWithAuthorId(String server, String authorId) throws NoQuotesForServerException, NoSplitDataForQuoteException {
+        List<QuoteDto> quoteDtos = getAllQuotesByServerAndAuthor(server, authorId);
+        Random random = new Random();
+        int firstId = random.nextInt(quoteDtos.size());
+        int secondId = random.nextInt(quoteDtos.size());
+        Quote firstQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(firstId));
+        Quote secondQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(secondId));
+        return executeRemix(firstQuote, secondQuote);
+    }
+
+    private RemixQuoteDto remixWithQuoteId(String server, int quoteId) throws NoQuotesForServerException, QuoteNotFoundException, NoSplitDataForQuoteException {
+        List<QuoteDto> quoteDtos = getAllServerQuotes(server);
+        Random random = new Random();
+        int leftOrRight = random.nextInt(2);
+        Quote firstQuote;
+        Quote secondQuote;
+        if(leftOrRight == 0)
+        {
+            int secondId = random.nextInt(quoteDtos.size());
+            firstQuote = MapperService.INSTANCE.quoteDtoToQuote(getQuoteByServerAndServerQuoteId(server, quoteId));
+            secondQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(secondId));
+        }
+        else
+        {
+            int firstId = random.nextInt(quoteDtos.size());
+            firstQuote = MapperService.INSTANCE.quoteDtoToQuote(quoteDtos.get(firstId));
+            secondQuote = MapperService.INSTANCE.quoteDtoToQuote(getQuoteByServerAndServerQuoteId(server, quoteId));
+        }
+        return executeRemix(firstQuote, secondQuote);
     }
 }
