@@ -145,9 +145,7 @@ public class QuoteService {
     private int getNextQuoteIDForServer(String server){
         List<Quote> quotes =  quoteRepository.findByServerId(server);
         AtomicInteger nextId = new AtomicInteger();
-        quotes.forEach((p)->{
-            nextId.set(Math.max(p.getServerQuoteId(), nextId.get()));
-        });
+        quotes.forEach((p)-> nextId.set(Math.max(p.getServerQuoteId(), nextId.get())));
         return nextId.get() + 1;
     }
 }
