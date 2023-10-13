@@ -125,6 +125,7 @@ paths:
       responses:
         "200":
           description: OK
+#  following endpoint is to be deleted if remains simply a dupe
   /quotes/server/{serverId}/author/{authorId}:
     get:
       summary: Get a quote author's total quotes attributed to them
@@ -181,9 +182,9 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/RemixQuoteDto"
-  /quotes/server/{serverId}/remix/{id}:
+  /quotes/server/{serverId}/stats:
     get:
-      summary: Remix Quotes on the server
+      summary: Get server stats
       parameters:
         - in: path
           name: serverId
@@ -191,13 +192,7 @@ paths:
             type: string
           required: true
           description: The discord server Id
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: The server quote ID to remix
-      operationId: remixQuoteIDGET
+      operationId: getServerStats
       tags:
         - quote
       responses:
@@ -206,10 +201,10 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/RemixQuoteDto"
-  /quotes/server/{serverId}/remix/{authorId}:
+                $ref: "#/components/schemas/ServerQuoteStatsDto"
+  /quotes/server/{serverId}/stats/{authorId}:
     get:
-      summary: Remix Quotes on the server
+      summary: Get individual users stats
       parameters:
         - in: path
           name: serverId
@@ -222,8 +217,8 @@ paths:
           schema:
             type: string
           required: true
-          description: The author discord ID to pull quotes from
-      operationId: remixQuoteAuthorGET
+          description: The author's discord Id
+      operationId: getAuthorStats
       tags:
         - quote
       responses:
@@ -232,7 +227,7 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/RemixQuoteDto"
+                $ref: "#/components/schemas/IndividualQuoteStatsDto"
 components:
   schemas:
     ApiError:
@@ -328,3 +323,27 @@ components:
         quote:
           type: string
           example: "A quote"
+    ServerQuoteStatsDto:
+      type: object
+      properties:
+        serverId:
+          type: string
+          example: "123123123"
+        totalQuotes:
+          type: integer
+          example: 1
+    IndividualQuoteStatsDto:
+      type: object
+      properties:
+        authorId:
+          type: string
+          example: "12121212121"
+        serverId:
+          type: string
+          example: "12123123"
+        totalTimesQuoted:
+          type: integer
+          example: 1
+        totalQuotesAdded:
+          type: integer
+          example: 1

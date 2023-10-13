@@ -1,9 +1,6 @@
 package com.example.raiquotesv2.service;
 
-import com.baeldung.openapi.model.AddQuoteRequestDto;
-import com.baeldung.openapi.model.AuthorTotalDto;
-import com.baeldung.openapi.model.QuoteDto;
-import com.baeldung.openapi.model.RemixQuoteDto;
+import com.baeldung.openapi.model.*;
 import com.example.raiquotesv2.Exception.NoQuotesForServerException;
 import com.example.raiquotesv2.Exception.NoSplitDataForQuoteException;
 import com.example.raiquotesv2.Exception.QuoteNotFoundException;
@@ -141,6 +138,25 @@ public class QuoteService {
                 throw new TooManyArgumentsException("Cannot have both quoteId and authorId");
             }
         }
+    }
+
+    public ServerQuoteStatsDto getServerStats(String serverId){
+        ServerQuoteStatsDto serverQuoteStatsDto = new ServerQuoteStatsDto();
+        List<Quote> quotes = quoteRepository.findByServerId(serverId);
+        serverQuoteStatsDto.setTotalQuotes(quotes.size());
+        serverQuoteStatsDto.setServerId(serverId);
+        return serverQuoteStatsDto;
+    }
+
+    public IndividualQuoteStatsDto getAuthorServerStats(String serverId, String authorId){
+        IndividualQuoteStatsDto individualQuoteStatsDto = new IndividualQuoteStatsDto();
+        List<Quote> quotes = quoteRepository.findByServerIdAndAuthorId(serverId, authorId);
+        List<Quote> addedQuotes = quoteRepository.findByServerIdAndAddedBy(serverId, authorId);
+        individualQuoteStatsDto.setAuthorId(authorId);
+        individualQuoteStatsDto.setTotalQuotesAdded(addedQuotes.size());
+        individualQuoteStatsDto.setTotalTimesQuoted(quotes.size());
+        individualQuoteStatsDto.setServerId(serverId);
+        return individualQuoteStatsDto;
     }
 
     //private functions

@@ -1,10 +1,7 @@
 package com.example.raiquotesv2.controller;
 
 import com.baeldung.openapi.api.QuotesApi;
-import com.baeldung.openapi.model.AddQuoteRequestDto;
-import com.baeldung.openapi.model.AuthorTotalDto;
-import com.baeldung.openapi.model.QuoteDto;
-import com.baeldung.openapi.model.RemixQuoteDto;
+import com.baeldung.openapi.model.*;
 import com.example.raiquotesv2.Exception.*;
 import com.example.raiquotesv2.service.QuoteService;
 import org.springframework.http.HttpStatus;
@@ -92,5 +89,14 @@ public class QuoteController implements QuotesApi {
         } catch (TooManyArgumentsException e) {
             throw new EndpointApplicationError(QuoteApiError.TOO_MANY_ARGUMENTS, e.getMessage());
         }
+    }
+
+    public ResponseEntity<ServerQuoteStatsDto> getServerStats(String serverId)
+    {
+        return new ResponseEntity<>(quoteService.getServerStats(serverId), HttpStatus.OK);
+    }
+
+    public ResponseEntity<IndividualQuoteStatsDto> getAuthorStats(String serverId, String authorId){
+        return new ResponseEntity<>(quoteService.getAuthorServerStats(serverId,authorId), HttpStatus.OK);
     }
 }
