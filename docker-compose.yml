@@ -2,7 +2,9 @@ version: "3.2"
 services:
   redbot:
     container_name: redbot
-    image: phasecorex/red-discordbot
+    build:
+      context: ./RedBotDocker
+      dockerfile: Dockerfile
     restart: unless-stopped
     volumes:
       - ./redbot:/data
@@ -23,3 +25,13 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
     command: -p 5433
+  api:
+    ports:
+      - '8080:8080'
+    build:
+      context: ./RaiQuotes-V2
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5433/quotes

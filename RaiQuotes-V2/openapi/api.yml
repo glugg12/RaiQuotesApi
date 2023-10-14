@@ -68,6 +68,16 @@ paths:
             type: string
           required: true
           description: The discord server Id
+        - in: query
+          name: authorId
+          schema:
+            type: string
+          description: The author ID
+        - in: query
+          name: authorName
+          schema:
+            type: string
+          description: The author name
       operationId: getServerRandomGET
       tags:
         - quote
@@ -260,7 +270,7 @@ components:
         authorId:
           type: string
           example: "012345678"
-        author_name:
+        authorName:
           type: string
           example: "Example"
         dateAdded:

@@ -38,12 +38,14 @@ public class QuoteController implements QuotesApi {
         }
     }
 
-    public ResponseEntity<QuoteDto> getServerRandomGET(String serverId){
+    public ResponseEntity<QuoteDto> getServerRandomGET(String serverId, String authorId, String authorName){
         try{
-            QuoteDto output = quoteService.selectRandomQuote(quoteService.getAllServerQuotes(serverId));
+            QuoteDto output = quoteService.selectRandomQuote(serverId, authorId, authorName);
             return new ResponseEntity<>(output, HttpStatus.OK);
         }catch(NoQuotesForServerException e){
             throw new EndpointApplicationError(QuoteApiError.NO_QUOTES_FOR_SERVER, e.getMessage());
+        }catch(TooManyArgumentsException e){
+            throw new EndpointApplicationError(QuoteApiError.TOO_MANY_ARGUMENTS, e.getMessage());
         }
     }
 

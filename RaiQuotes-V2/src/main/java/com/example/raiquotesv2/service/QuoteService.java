@@ -79,10 +79,38 @@ public class QuoteService {
         return quoteDtos;
     }
 
-    public QuoteDto selectRandomQuote(List<QuoteDto> quoteDtoList){
+    public List<QuoteDto> getAllQuotesByServerAndAuthorName(String serverId, String authorName) throws NoQuotesForServerException {
+        List<QuoteDto> quoteDtos = new ArrayList<>();
+        List<Quote> quotes = quoteRepository.findByServerIdAndAuthorName(serverId, authorName);
+        if(quotes.isEmpty())
+        {
+            throw new NoQuotesForServerException("No quotes on server " + serverId + " for author " + authorName);
+        }
+        quotes.forEach((p)-> quoteDtos.add(MapperService.INSTANCE.quoteToQuoteDto(p)));
+        return quoteDtos;
+    }
+
+    public QuoteDto selectRandomQuote(String serverId, String authorId, String authorName) throws NoQuotesForServerException, TooManyArgumentsException {
         Random random = new Random();
-        int index = random.nextInt(quoteDtoList.size());
-        return quoteDtoList.get(index);
+        List<QuoteDto> quoteDtos = new ArrayList<>();
+        if(authorId == null && authorName != null)
+        {
+            quoteDtos = getAllQuotesByServerAndAuthorName(serverId, authorName);
+        }
+        else if (authorId != null && authorName == null)
+        {
+            quoteDtos = getAllQuotesByServerAndAuthor(serverId, authorId);
+        }
+        else if (authorId != null)
+        {
+            throw new TooManyArgumentsException("Cannot have both ID and Name (Did you have additional content after a discord mention?)");
+        }
+        else
+        {
+            quoteDtos = getAllServerQuotes(serverId);
+        }
+        int index = random.nextInt(quoteDtos.size());
+        return quoteDtos.get(index);
     }
 
     public QuoteDto getQuoteByServerAndServerQuoteId(String server, Integer quoteId) throws QuoteNotFoundException {

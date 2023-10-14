@@ -11,5 +11,7 @@ public interface QuoteRepository extends CrudRepository<Quote, Integer> {
     List<Quote> findByAuthorId(String authorId);
     Optional<Quote> findByServerIdAndServerQuoteId(String serverId, Integer quoteId);
     List<Quote> findByServerIdAndAuthorId(String serverId, String authorId);
+
+    List<Quote> findByServerIdAndAuthorName(String serverId, String authorName);
     List<Quote> findByServerIdAndAddedBy(String serverId, String addedBy);
 }
