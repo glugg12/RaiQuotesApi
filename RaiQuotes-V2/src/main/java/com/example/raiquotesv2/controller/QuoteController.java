@@ -101,4 +101,31 @@ public class QuoteController implements QuotesApi {
     public ResponseEntity<IndividualQuoteStatsDto> getAuthorStats(String serverId, String authorId){
         return new ResponseEntity<>(quoteService.getAuthorServerStats(serverId,authorId), HttpStatus.OK);
     }
+
+    public ResponseEntity<QuoteSplitDto> getSplits(String serverId, Integer quoteId){
+        try{
+            return new ResponseEntity<>(quoteService.getSplits(serverId, quoteId), HttpStatus.OK);
+        }
+        catch(QuoteNotFoundException e)
+        {
+            throw new EndpointApplicationError(QuoteApiError.QUOTE_NOT_FOUND, e.getMessage());
+        }
+        catch(NoSplitDataForQuoteException e)
+        {
+            throw new EndpointApplicationError(QuoteApiError.NO_SPLIT_DATA_FOR_QUOTE, e.getMessage());
+        }
+    }
+
+    public ResponseEntity<QuoteSplitDto> setSplits(String serverId, Integer quoteId, QuoteSplitRequestDto quoteSplitRequestDto){
+        try{
+            return new ResponseEntity<>(quoteService.setSplits(serverId,quoteId, quoteSplitRequestDto), HttpStatus.OK);
+        }catch(QuoteNotFoundException e)
+        {
+            throw new EndpointApplicationError(QuoteApiError.QUOTE_NOT_FOUND, e.getMessage());
+        }
+        catch(NoSplitDataForQuoteException e)
+        {
+            throw new EndpointApplicationError(QuoteApiError.NO_SPLIT_DATA_FOR_QUOTE, e.getMessage());
+        }
+    }
 }

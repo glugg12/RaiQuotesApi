@@ -238,6 +238,62 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/IndividualQuoteStatsDto"
+  /quotes/server/{serverId}/{quoteId}/split:
+    get:
+      summary: get the current splits
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+        - in: path
+          name: quoteId
+          schema:
+            type: integer
+          required: true
+          description: the server quote id
+      operationId: getSplits
+      tags:
+        - quote
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/quoteSplitDto"
+    post:
+      summary: set the splits for the quote
+      parameters:
+        - in: path
+          name: serverId
+          schema:
+            type: string
+          required: true
+          description: The discord server Id
+        - in: path
+          name: quoteId
+          schema:
+            type: integer
+          required: true
+          description: the server quote id
+      operationId: setSplits
+      tags:
+        - quote
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/quoteSplitRequestDto"
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/quoteSplitDto"
 components:
   schemas:
     ApiError:
@@ -297,9 +353,6 @@ components:
         authorName:
           type: string
           example: "Example"
-        date:
-          type: string
-          example: "<DATE>"
         imageUrl:
           type: string
           example: "https://animage.com"
@@ -355,5 +408,29 @@ components:
           type: integer
           example: 1
         totalQuotesAdded:
+          type: integer
+          example: 1
+    quoteSplitDto:
+      type: object
+      properties:
+        quoteId:
+          type: integer
+          example: 1
+        fullQuote:
+          type: string
+          example: "assdasd"
+        splitLeftPosition:
+          type: integer
+          example: 1
+        splitRightPosition:
+          type: integer
+          example: 1
+    quoteSplitRequestDto:
+      type: object
+      properties:
+        splitLeftPosition:
+          type: integer
+          example: 1
+        splitRightPosition:
           type: integer
           example: 1

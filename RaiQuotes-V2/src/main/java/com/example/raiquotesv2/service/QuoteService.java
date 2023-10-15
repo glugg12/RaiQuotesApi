@@ -13,11 +13,8 @@ import com.example.raiquotesv2.utility.MapperService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -45,7 +42,7 @@ public class QuoteService {
         //todo: if there are no quotes in the server, we'll reset to id 1. Is this okay behaviour? Not likely to ever encounter it on gral tho
         Quote quote = MapperService.INSTANCE.AddQuoteRequestDtotoQuote(addQuoteRequestDto);
         quote.setServerQuoteId(getNextQuoteIDForServer(quote.getServerId()));
-        quote.setDateAdded(LocalDate.parse(addQuoteRequestDto.getDate()));
+        quote.setDateAdded(LocalDateTime.now());
         RemixSplit remixSplit = setUpNewQuoteSplits(quote);
         quoteRepository.save(quote);
         remixSplitRepository.save(remixSplit);
@@ -92,7 +89,7 @@ public class QuoteService {
 
     public QuoteDto selectRandomQuote(String serverId, String authorId, String authorName) throws NoQuotesForServerException, TooManyArgumentsException {
         Random random = new Random();
-        List<QuoteDto> quoteDtos = new ArrayList<>();
+        List<QuoteDto> quoteDtos;
         if(authorId == null && authorName != null)
         {
             quoteDtos = getAllQuotesByServerAndAuthorName(serverId, authorName);
@@ -187,6 +184,42 @@ public class QuoteService {
         return individualQuoteStatsDto;
     }
 
+    public QuoteSplitDto getSplits(String serverId, int quoteID) throws QuoteNotFoundException, NoSplitDataForQuoteException {
+        QuoteDto quote = getQuoteByServerAndServerQuoteId(serverId, quoteID);
+        Optional<RemixSplit> remixSplit = remixSplitRepository.findRemixSplitByQuote(MapperService.INSTANCE.quoteDtoToQuote(quote));
+        if (remixSplit.isEmpty()){
+            throw new NoSplitDataForQuoteException("No split data for quote ID " + quoteID);
+        }
+        QuoteSplitDto quoteSplitDto = new QuoteSplitDto();
+        quoteSplitDto.setFullQuote(quote.getQuote());
+        quoteSplitDto.setQuoteId(quoteID);
+        quoteSplitDto.setSplitLeftPosition(remixSplit.get().getSplitLeftEndPos());
+        quoteSplitDto.setSplitRightPosition(remixSplit.get().getSplitRightEndPos());
+        return quoteSplitDto;
+    }
+
+    public QuoteSplitDto setSplits(String serverId, int quoteId, QuoteSplitRequestDto quoteSplitRequestDto) throws QuoteNotFoundException, NoSplitDataForQuoteException {
+        QuoteDto quote = getQuoteByServerAndServerQuoteId(serverId, quoteId);
+        Optional<RemixSplit> remixSplit = remixSplitRepository.findRemixSplitByQuote(MapperService.INSTANCE.quoteDtoToQuote(quote));
+        if(remixSplit.isPresent())
+        {
+            RemixSplit remixSplitNew = remixSplit.get();
+            remixSplitNew.setSplitLeftEndPos(quoteSplitRequestDto.getSplitLeftPosition() == null? remixSplit.get().getSplitLeftEndPos() : quoteSplitRequestDto.getSplitLeftPosition());
+            remixSplitNew.setSplitRightEndPos(quoteSplitRequestDto.getSplitRightPosition() == null? remixSplit.get().getSplitRightEndPos() : quoteSplitRequestDto.getSplitRightPosition());
+            remixSplitRepository.save(remixSplitNew);
+            QuoteSplitDto quoteSplitDto = new QuoteSplitDto();
+            quoteSplitDto.setFullQuote(quote.getQuote());
+            quoteSplitDto.setSplitLeftPosition(remixSplitNew.getSplitLeftEndPos());
+            quoteSplitDto.setSplitRightPosition(remixSplitNew.getSplitRightEndPos());
+            quoteSplitDto.setQuoteId(quoteId);
+            return quoteSplitDto;
+        }
+        else
+        {
+            throw new NoSplitDataForQuoteException("No split data exists for quote " + quoteId + "! Something weird happening...");
+        }
+    }
+
     //private functions
     private RemixSplit setUpNewQuoteSplits(Quote quote){
         RemixSplit split = new RemixSplit();
@@ -224,14 +257,70 @@ public class QuoteService {
     private RemixQuoteDto executeRemix(Quote firstQuote, Quote secondQuote) throws NoSplitDataForQuoteException {
         int firstEnd = remixSplitRepository.findRemixSplitByQuote(firstQuote).map(RemixSplit::getSplitLeftEndPos).orElseThrow(() -> new NoSplitDataForQuoteException("No split data for quote " + firstQuote.getId()));
         int secondEnd = remixSplitRepository.findRemixSplitByQuote(secondQuote).map(RemixSplit::getSplitRightEndPos).orElseThrow(() -> new NoSplitDataForQuoteException("No split data for quote " + secondQuote.getId()));
-        String remixed = StringUtils.substring(firstQuote.getQuote(), 0, firstEnd) + StringUtils.substring(secondQuote.getQuote(), secondEnd, secondQuote.getQuote().length());
+        String checkForSpaceRight = StringUtils.substring(secondQuote.getQuote(), secondEnd, secondQuote.getQuote().length());
+        checkForSpaceRight = fixFormatting(checkForSpaceRight, true);
+        if(!checkForSpaceRight.startsWith(" "))
+        {
+          checkForSpaceRight = " " + checkForSpaceRight;
+        }
+        String checkForSpaceLeft = fixFormatting(StringUtils.substring(firstQuote.getQuote(), 0, firstEnd), false);
+        if(checkForSpaceLeft.endsWith(" "))
+        {
+            checkForSpaceLeft = checkForSpaceLeft.substring(0, checkForSpaceLeft.length() - 1);
+        }
+        String remixed = checkForSpaceLeft + checkForSpaceRight;
         RemixQuoteDto remixQuoteDto = new RemixQuoteDto();
         remixQuoteDto.setQuote(remixed);
-        remixQuoteDto.setAuthor1(firstQuote.getAuthorId());
+        remixQuoteDto.setAuthor1(firstQuote.getAuthorId() == null? firstQuote.getAuthorName() : firstQuote.getAuthorId());
         remixQuoteDto.setQuoteId1(firstQuote.getServerQuoteId());
-        remixQuoteDto.setAuthor2(secondQuote.getAuthorId());
+        remixQuoteDto.setAuthor2(secondQuote.getAuthorId() == null? secondQuote.getAuthorName() : secondQuote.getAuthorId());
         remixQuoteDto.setQuoteId2(secondQuote.getServerQuoteId());
         return remixQuoteDto;
+    }
+
+    private String fixFormatting(String toFix, Boolean reverse)
+    {
+        String[] formatters = {"***", "**", "*", "~~", "__", "_"};
+        boolean skipAsteriks = false;
+        boolean skipUnderscores = false;
+        List<String> toAdd = new ArrayList<>();
+        for (String formatter : formatters) {
+            if(toFix.contains(formatter))
+            {
+                if((StringUtils.countMatches(toFix, formatter)%2) != 0)
+                {
+                    if(!skipAsteriks && formatter.contains("*")){
+                        toAdd.add(formatter);
+                        skipAsteriks = true;
+                    }
+                    else if(!skipUnderscores && formatter.contains("_")){
+                        toAdd.add(formatter);
+                        skipUnderscores = true;
+                    }
+                    else if(!formatter.contains("*") && !formatter.contains("_"))
+                    {
+                        toAdd.add(formatter);
+                    }
+                }
+            }
+        }
+        for (String format : toAdd) {
+            if(reverse)
+            {
+                if(!toFix.startsWith(format))
+                {
+                    toFix = format.concat(toFix);
+                }
+            }
+            else
+            {
+                if(!toFix.endsWith(format))
+                {
+                    toFix = toFix.concat(format);
+                }
+            }
+        }
+        return toFix;
     }
 
     private RemixQuoteDto remixWithAuthorId(String server, String authorId) throws NoQuotesForServerException, NoSplitDataForQuoteException {
